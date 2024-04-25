@@ -1,0 +1,282 @@
+Dfs
+
+#include <iostream>
+#include <vector>
+#include <omp.h>
+
+using namespace std;
+
+// Graph class representing an undirected graph using adjacency list representation
+class Graph {
+private:
+    int numVertices;          // Number of vertEnices
+    vector<vector<int>> adj;  // Adjacency list
+
+public:
+    // Constructor to initialize the graph with the specified number of vertices
+    Graph(int vertices) : numVertices(vertices), adj(vertices) {}
+
+    // Add an edge between two vertices
+    void addEdge(int src, int dest) {
+        adj[src].push_back(dest);
+        adj[dest].push_back(src);
+    }
+
+    // Perform Depth First Search (DFS) in parallel
+    void parallelDFS(int startVertex) {
+        vector<bool> visited(numVertices, false);
+        parallelDFSUtil(startVertex, visited);
+    }
+
+    // Helper function for parallel DFS traversal
+    void parallelDFSUtil(int currentVertex, vector<bool>& visited) {
+        visited[currentVertex] = true;
+        cout << currentVertex << " ";
+
+        #pragma omp parallel for
+        for (int i = 0; i < adj[currentVertex].size(); ++i) {
+            int neighbor = adj[currentVertex][i];
+            if (!visited[neighbor]) {
+                parallelDFSUtil(neighbor, visited);
+            }
+        }
+    }
+};
+
+int main() {
+    int numVertices;
+    cout << "Enter the number of vertices in the graph: ";
+    cin >> numVertices;
+
+    // Create a graph with the specified number of vertices
+    Graph graph(numVertices);
+
+    int numEdges;
+    cout << "Enter the number of edges in the graph: ";
+    cin >> numEdges;
+
+    cout << "Enter the edges (source destination):\n";
+    for (int i = 0; i < numEdges; i++) {
+        int src, dest;
+        cin >> src >> dest;
+        graph.addEdge(src, dest);
+    }
+
+    int startVertex;
+    cout << "Enter the starting vertex for DFS: ";
+    cin >> startVertex;
+
+    cout << "Depth First Search (DFS): ";
+    graph.parallelDFS(startVertex);
+    cout << endl;
+
+    return 0;
+}
+
+
+BFS
+
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <omp.h>
+
+using namespace std;
+
+// Graph class representing an undirected graph using adjacency list representation
+class Graph {
+private:
+    int numVertices;          // Number of vertices
+    vector<vector<int>> adj;  // Adjacency list
+
+public:
+    // Constructor to initialize the graph with the specified number of vertices
+    Graph(int vertices) : numVertices(vertices), adj(vertices) {}
+
+    // Add an edge between two vertices
+    void addEdge(int src, int dest) {
+        adj[src].push_back(dest);
+        adj[dest].push_back(src);
+    }
+
+    // Perform Breadth First Search (BFS) in parallel
+    void bfs(int startVertex) {
+        vector<bool> visited(numVertices, false);
+        queue<int> q;
+
+        // Mark the start vertex as visited and enqueue it
+        visited[startVertex] = true;
+        q.push(startVertex);
+
+        while (!q.empty()) {
+            int currentVertex = q.front();
+            q.pop();
+            cout << currentVertex << " ";
+
+            // Enqueue all adjacent unvisited vertices
+            #pragma omp parallel for
+            for (int neighbor : adj[currentVertex]) {
+                if (!visited[neighbor]) {
+                    visited[neighbor] = true;
+                    q.push(neighbor);
+                }
+            }
+        }
+    }
+};
+
+int main() {
+    int numVertices;
+    cout << "Enter the number of vertices in the graph: ";
+    cin >> numVertices;
+
+    // Create a graph with the specified number of vertices
+    Graph graph(numVertices);
+
+    int numEdges;
+    cout << "Enter the number of edges in the graph: ";
+    cin >> numEdges;
+
+    cout << "Enter the edges (source destination):\n";
+    for (int i = 0; i < numEdges; i++) {
+        int src, dest;
+        cin >> src >> dest;
+        graph.addEdge(src, dest);
+    }
+
+    int startVertex;
+    cout << "Enter the starting vertex for BFS: ";
+    cin >> startVertex;
+
+    cout << "Breadth First Search (BFS): ";
+    graph.bfs(startVertex);
+    cout << endl;
+
+    return 0;
+}
+
+
+bubble sort
+#include <iostream>
+#include <vector>
+#include <omp.h>
+
+using namespace std;
+
+// Function to perform parallel bubble sort
+void parallel_bubble_sort(vector<int>& arr) {
+    int n = arr.size();
+    bool swapped;
+
+    for (int i = 0; i < n - 1; i++) {
+        swapped = false;
+#pragma omp parallel for shared(arr, swapped)
+        for (int j = 0; j < n - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                swap(arr[j], arr[j + 1]);
+                swapped = true;
+            }
+        }
+        if (!swapped) break;
+    }
+}
+
+int main() {
+    // Input elements from the user
+    vector<int> arr; //vector name arr
+    int numElements;
+    cout << "Enter the number of elements: ";
+    cin >> numElements;
+
+    cout << "Enter the elements:\n";
+    for (int i = 0; i < numElements; i++) {
+        int num;
+        cin >> num;
+        arr.push_back(num);
+    }
+
+    // Perform parallel bubble sort
+    parallel_bubble_sort(arr);
+
+    // Output the sorted elements
+    cout << "After sorting: ";
+    for (int num : arr) {  //iterates over each element of the vector arr
+        cout << num << " ";
+    }
+    cout << endl;
+
+    return 0;
+}
+
+
+
+
+
+Min Max Avg
+
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<omp.h>
+
+using namespace std;
+
+int parallel_min(const vector<int> &arr){
+    int result = arr[0];
+
+    #pragma omp parallel for reduction(min:result)
+    for(int i = 0; i<arr.size(); i++){
+        result = min(result,arr[i]);
+    }
+
+    return result;
+}
+
+int parallel_max(const vector<int> &arr){
+
+    #pragma omp parallel for reduction(max:result)
+    int result = arr[0];
+    for(int i = 0; i<arr.size(); i++){
+        result = max(result,arr[i]);
+    }
+
+    return result;
+}
+
+int parallel_sum(const vector<int> &arr){
+
+    #pragma omp parallel for reduction(+:result)
+    int result = 0;
+    for(int i = 0;i<arr.size();i++){
+        result += arr[i];
+    }
+
+    return result;
+}
+
+double parallel_avg(const vector<int> &arr){
+
+    double sum = parallel_sum(arr);
+
+    return double (sum) / arr.size();
+}
+
+int main(){
+    int size;
+    cout << "Enter the number of elements: ";
+    cin >> size;
+
+    vector<int> arr(size);
+
+    cout << "Enter " << size << " integers:\n";
+    for (int i = 0; i < size; ++i) {
+        cin >> arr[i];
+    }
+
+    cout << "Minimum: " << parallel_min(arr) << endl;
+    cout << "Maximum: " << parallel_max(arr) << endl;
+    cout << "Sum: " << parallel_sum(arr) << endl;
+    cout << "Average: " << parallel_avg(arr) << endl;
+
+    return 0;
+}
